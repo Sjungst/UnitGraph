@@ -1,0 +1,656 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+
+<html>
+<style>
+
+html, body {
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+}
+
+.links line {
+  stroke: #999;
+  stroke-opacity: 0.6;
+}
+
+.nodes circle {
+  stroke: #444;
+  stroke-width: 1px;
+}
+
+text {
+  font: 6px helvetica;
+}
+
+
+#network {
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.grid-container-main {
+  display: grid;
+  grid-template-columns: 4fr 1fr;
+  height: 100%;
+}
+
+.sidenav {
+    top: 0;
+    bottom: 0;
+    background: #ccc;
+    display: grid;
+    grid-template-columns: 1fr;
+    grid-template-rows: 0.5fr 0.1fr 0.5fr 0.5fr 0.5fr 0.2fr 0.5fr;
+    grid-row-gap: 1em;
+    overflow-y: scroll;
+    /*position: fixed;*/
+    padding: 8px 8px 8px 8px;
+}
+
+/* width */
+::-webkit-scrollbar {
+    width: 10px;
+}
+
+/* Track */
+::-webkit-scrollbar-track {
+    background: #f1f1f1;
+}
+
+/* Handle */
+::-webkit-scrollbar-thumb {
+    background: #888;
+}
+
+/* Handle on hover */
+::-webkit-scrollbar-thumb:hover {
+    background: #555;
+}
+
+.container-radio {
+    display: block;
+    position: relative;
+    padding-left: 35px;
+    margin-bottom: 12px;
+    cursor: pointer;
+    font-size: 16px;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+
+/* Hide the browser's default radio button */
+.container-radio input {
+    position: absolute;
+    opacity: 0;
+    cursor: pointer;
+}
+
+/* Create a custom radio button */
+.checkmark {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 15px;
+    width: 15px;
+    background-color: #f8f8f8;
+    border-radius: 50%;
+}
+
+/* On mouse-over, add a grey background color */
+.container-radio:hover input ~ .checkmark {
+    background-color: #aaa;
+}
+
+/* When the radio button is checked, add a blue background */
+.container-radio input:checked ~ .checkmark {
+    background-color: #2196F3;
+}
+
+/* Create the indicator (the dot/circle - hidden when not checked) */
+.checkmark:after {
+    content: "";
+    position: absolute;
+    display: none;
+}
+
+/* Show the indicator (dot/circle) when checked */
+.container-radio input:checked ~ .checkmark:after {
+    display: block;
+}
+
+/* Style the indicator (dot/circle) */
+.container-radio .checkmark:after {
+  top: 3.5px;
+  left: 3.5px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: white;
+}
+
+
+h3 {
+    color: black;
+    font-family: Times;
+    font-size:  1.2em;
+    margin: 10px;
+    /*padding: 0px;*/
+
+}
+
+.grid-container-buttons {
+  display: grid;
+  grid-row-gap: 1em;
+  grid-column-gap: 1em;
+  grid-template-columns: 1fr 1fr;
+}
+
+.button-top{
+  grid-row: 1;
+}
+
+.grid-centered {
+  grid-column: span 2;
+}
+
+.button-bottom{
+  grid-row: 2;
+
+}
+
+textarea {
+    width: 100%;
+    height: 50px;
+    padding: 2px 2px;
+    box-sizing: border-box;
+    border: 2px solid #aaa;
+    border-radius: 4px;
+    background-color: #f8f8f8;
+    resize: none;
+    overflow: hidden;
+}
+
+.main {
+    margin-left: 160px;
+    padding: 0px 10px;
+}
+
+.button {
+  background-color: #666;
+  border: none;
+  border-radius: 6px;
+  color: white;
+  /*display: block;*/
+  /*margin: auto;*/
+  padding: 10px 10px;
+  text-align: center;
+  font-size: 16px;
+  cursor: pointer;
+  position: relative;
+  /*width:100%;*/
+}
+
+#sort_button{
+  background-color: #000;
+  height:100%;
+}
+
+#update_button{
+  background-color: #a33;
+}
+
+#discard_button{
+  background-color: #4a4;
+}
+
+#save_button{
+  background-color: #99f;
+}
+
+
+</style>
+
+<body>
+<div id="container" class="grid-container-main">
+  <div id="graph">
+    <svg id="network"></svg>
+  </div>
+
+  <div class="sidenav">
+
+    <div>
+      <h3>Network Layout: </h3>
+        <label class="container-radio">Default
+          <input type="radio" checked="checked" name="radio">
+          <span class="checkmark"></span>
+        </label>
+        <label class="container-radio">Radial
+          <input id="radial-layout-radio" type="radio" name="radio">
+          <span class="checkmark"></span>
+        </label>
+        <label class="container-radio">Vertical
+          <input id="vertical-layout-radio" type="radio" name="radio">
+          <span class="checkmark"></span>
+        </label>
+    </div>
+
+    <div>
+        <label class="switch">
+          <input id="display-labels-checkbox" type="checkbox" checked>
+          <span class="slider round">Labels</span>
+        </label>
+    </div>
+
+    <div>
+      <h3>Unit Derivation:</h3>
+      <textarea id="NodeName" rows="2"></textarea>
+    </div>
+
+    <div>
+      <h3>Description:</h3>
+      <textarea id="NodeDescription" rows="2"></textarea>
+    </div>
+<!--
+    <div>
+      <h3>Symbol:</h3>
+      <textarea id="NodeSymbol" rows="2"></textarea>
+    </div>
+ -->
+    <div>
+      <h3>Wolfram Alpha Page:</h3>
+      <a id=wolframalphaLink href="" target="_blank"></a>
+    </div>
+
+<!--     <div class="grid-container-buttons">
+      <button id="update_button" disabled class="button button-top" onclick="discardChanges()">Discard Changes</button>
+      <button id="discard_button" disabled class="button button-top" onclick="updateNode()">Save Changes</button>
+        <button id=save_button class="grid-centered button button-bottom" disabled onclick="saveGraph()">Download Network</button>
+    </div> -->
+
+
+
+  </div>
+</div>
+</body>
+
+
+<script src="https://d3js.org/d3.v4.min.js"></script>
+
+<script>
+
+var width = document.getElementById("graph").clientWidth;
+var height = document.getElementById("graph").clientHeight;
+
+var cx = width/2;
+var cy = height/2;
+
+const svg = d3.select('svg')
+  .attr('width', width)
+  .attr('height', height)
+  .call(d3.zoom().on("zoom", function () {
+    svg.attr("transform", d3.event.transform)}))
+  .append("g")
+
+var save_state = {};
+var selected_node = {};
+
+document.getElementById("display-labels-checkbox").checked = false
+
+var radius = 5;
+
+var color = d3.scaleOrdinal(["#000000",   //black
+                             "#964B00",   //brown
+                             "#ED2939",   //red
+                             "#FF4F00",   //orange
+                             "#FDFF00",   //yellow
+                             "#228B22",   //green
+                             "#0087BD",   //blue
+                             "#DF00FF",   //purple
+                             "#A9A9A9",   //grey
+                             "FFFFFF"]);  //white);
+
+// var color = d3.scaleOrdinal(["#000000",
+//                              "#33e02f",
+//                              "#5615c5",
+//                              "#86bc00",
+//                              "#ff93f1",
+//                              "#a18800",
+//                              "#8fb1ff",
+//                              "#da0030",
+//                              "#01dcd3",
+//                              "#ff6257",
+//                              "#00396d",
+//                              "#a9d37d",
+//                              "#411142",
+//                              "#4e4300",
+//                              "#7d0022",
+//                              "#a87976"]);
+
+
+// var simulation = d3.forceSimulation()
+//     .force("link", d3.forceLink().id(function(d) { return d.id; }))
+//     .force("center", d3.forceCenter(width / 2, height / 2))
+//     .force("charge", d3.forceManyBody().strength(function (d, i) {
+//         var a = i == 0 ? -20 : -10;
+//         return a;
+//     }).distanceMin(9).distanceMax(100));
+
+var simulation = d3.forceSimulation()
+    .force("link", d3.forceLink().id(function(d) { return d.id; }).strength(1))
+    .force("charge", d3.forceManyBody().strength(-50).distanceMin(30).distanceMax(200))
+    .force("center", d3.forceCenter(cx, cy))
+    .force('collision', d3.forceCollide().radius(function(d) {
+      if (d.level == 0) {return radius*10} else {return radius*2}}));
+
+
+d3.json("data/node_data.json", function(error, graph) {
+  if (error) throw error;
+
+  var link = svg.append("g")
+    .attr("class", "links")
+    .selectAll("line")
+    .data(graph.links)
+    .enter().append("line")
+    .attr("stroke-width", function(d) {return Math.sqrt(d.value)});
+
+  var node = svg.append("g")
+    .attr("class", "nodes")
+    .selectAll("circle")
+    .data(graph.nodes)
+    .enter().append("circle")
+    .attr("r", function(d) {if (d.level == 0) {return radius*2.5} else {return radius}})
+    .attr("fill", function(d) {return color(d.level)})
+    .call(d3.drag()
+    .on("start", dragStarted)
+    .on("drag", dragged)
+    .on("end", dragEnded))
+    // .on("mouseover", function(d, i) { console.log(d.description); })
+    // .on("mouseout",  function(d, i) { d3.select("#tooltip").remove(); });
+    .on("click", selectNode);
+
+  // Lables for the nodes
+  const descriptionLabels = svg.append('g')
+    .attr("class", "labels")
+    .selectAll('text')
+    .data(graph.nodes)
+    .enter().append('text')
+      .text(node => node.description)
+      .attr('font-size', 10)
+      .attr('dx', 10)
+      .attr('dy', 3)
+
+  // Unit symbol labels (Ex. voltage = V)
+  // const textElements = svg.append('g')
+  //   .selectAll('text')
+  //   .data(graph.nodes)
+  //   .enter().append('text')
+  //     .text(node => node.symbol)
+  //     .attr('fill', "white")
+  //     .attr('font-size', radius)
+  //     .attr('dx', -radius*0.36)
+  //     .attr('dy',  radius*0.36)
+
+
+  node.append("title")
+      .text(function(d) { return d.id; });
+
+  node.append("title")
+      .attr("dx", 10)
+      .attr("dy", ".35em")
+      .text(function(d) { return d.id })
+      .style("stroke", "gray");
+
+  node.append("circle")
+      .attr("r", 8)
+      .style("fill", function (d) {
+      return color(d.level);
+    });
+
+  simulation
+      .nodes(graph.nodes)
+      .on("tick", ticked);
+
+  simulation.force("link")
+      .links(graph.links);
+
+
+  save_state = {
+    "nodes" : simulation.nodes(),
+    "links" : simulation.force("link").links()
+  }
+
+  // download(JSON.stringify(save_state), 'myDataSim.json', 'application/json');
+  // save_state.nodes[0].x = 1400;
+
+  // simulation.nodes(save_state.nodes);
+  // simulation.force("link").links(save_state.links);
+
+  function ticked() {
+
+
+    if(document.getElementById("radial-layout-radio").checked == true){
+      radialLayout();
+    }else if(document.getElementById("vertical-layout-radio").checked == true){
+      verticalLayout();
+    }else{
+      defaultLayout();
+    }
+
+    link
+        .attr("x1", function(d) { return d.source.x; })
+        .attr("y1", function(d) { return d.source.y; })
+        .attr("x2", function(d) { return d.target.x; })
+        .attr("y2", function(d) { return d.target.y; });
+
+  if(document.getElementById("display-labels-checkbox").checked == true) {
+        d3.selectAll("text")
+          .attr("x", function (d) { return d.x; })
+          .attr("y", function (d) { return d.y; })
+          .attr("opacity", 1);
+    } else{
+      d3.selectAll("text")
+         .attr("opacity", 0)
+         .attr("x", function (d) { return 0; })
+         .attr("y", function (d) { return 5000; });
+  }
+}
+
+function radialLayout(){
+  node
+        .attr("cx", function(d){
+          var annulus = getAnnulus(d.level);
+          var position = verifyPosition(d.x, d.y, annulus[0], annulus[1]);
+          d.x = position[0];
+          return d.x;
+        })
+        .attr("cy", function(d){
+          var annulus = getAnnulus(d.level);
+          var position = verifyPosition(d.x, d.y, annulus[0], annulus[1]);
+          d.y = position[1];
+          return d.y;
+        });
+}
+
+function verticalLayout(){
+  separator = 10;
+  sf = 100;
+
+  node
+        .attr("cx", function(d) { return d.x; })
+        // .attr("cy", function(d) { return d.y; })
+
+        .attr("cy", function(d){
+          var band = [d.level*sf - separator, d.level*sf];
+          if (band[0] < d.y && d.y < band[1]){
+            return d.y;
+          } else {
+            d.y = d.level*sf - 0.5 * separator
+        }
+        return d.y;
+      });
+}
+
+
+function defaultLayout(){
+  node
+        .attr("cx", function(d) { return d.x; })
+        .attr("cy", function(d) { return d.y; });
+}
+
+ //function returns small and big radiuses of annulus based on Point year
+  function getAnnulus(level){
+    var big_radius;
+    var separator = 80;
+    if(level !== ""){
+      var multiplier = level;
+      big_radius = (multiplier + 1) * separator;
+    } else {
+      big_radius = 200;
+    }
+    return [big_radius - separator, big_radius];
+  }
+
+  //function to verify if X in the correct position
+  function verifyPosition(x, y, small_r,big_r){
+    var point;
+    //verify if P is in annulus defined by small_r and big_r
+    if ( (Math.pow(x - cx,2) + Math.pow(y - cy, 2)) <= Math.pow(small_r,2) ){
+      // P inside small circle
+      point = recalculateP(x, y, small_r);
+    } else if ( (Math.pow(x - cx, 2) + Math.pow(y - cy, 2)) > Math.pow(big_r,2)){
+      // P outside big circle
+      point = recalculateP(x, y, big_r);
+    } else {
+      point = [x,y];
+    }
+    return point;
+  }
+
+  //places point off circle on circle ring
+  function recalculateP(x, y, r){
+    var vx = x - cx;
+    var vy = y - cy;
+    var norm = Math.sqrt(Math.pow(vx,2)+ Math.pow(vy,2));
+    var new_x = cx + vx / norm * r;
+    var new_y = cy + vy / norm * r;
+    return [new_x,new_y];
+  }
+});
+
+function dragStarted(d) {
+  if (!d3.event.active) simulation.alphaTarget(0.3).restart();
+  d.fx = d.x;
+  d.fy = d.y;
+}
+
+function dragged(d) {
+  d.fx = d3.event.x;
+  d.fy = d3.event.y;
+}
+
+function dragEnded(d) {
+  if (!d3.event.active) simulation.alphaTarget(0);
+  d.fx = null;
+  d.fy = null;
+  // d.fx = d.x; //Uncomment these lines for sticky nodes
+  // d.fy = d.y;
+}
+
+
+function selectNode(d) {
+  console.log(d);
+  document.getElementById("NodeName").value = d.id;
+  document.getElementById("NodeDescription").value = d.description;
+  // document.getElementById("NodeSymbol").value = d.symbol;
+  document.getElementById("wolframalphaLink").href = "http://www.wolframalpha.com/input/?i=" + d.id;
+  document.getElementById("wolframalphaLink").innerText = d.id
+  selected_node = d;
+
+}
+
+function updateNode(d){
+  console.log(selected_node);
+
+  // console.log("Update Node")
+
+  // if (typeof(selected_node) !== 'undefined') {
+  //   console.log("No node is selected!")
+  //   return
+  // }
+
+  // console.log("Node is selected")
+
+  // return
+
+  // d.description = document.getElementById("NodeSymbol").value;
+  // d.symbol = document.getElementById("NodeSymbol").value;
+
+  // save_state = {
+  //   "nodes" : simulation.nodes(),
+  //   "links" : reduced_links
+  // }
+
+}
+
+function discardChanges(d){
+  selectNode(selected_node);
+}
+
+function windowResize() {
+
+  width = document.getElementById("graph").clientWidth;
+  height = document.getElementById("graph").clientHeight;
+  d3.select('svg')
+    .attr('width', width)
+    .attr('height', height)
+
+  simulation.force("center", d3.forceCenter(width / 2, height / 2));
+}
+
+window.addEventListener("resize", windowResize);
+
+
+// http://blockbuilder.org/search#text%3Dd3%20js%20force
+
+
+function download(content, fileName, contentType) {
+    var a = document.createElement("a");
+    var file = new Blob([content], {type: contentType});
+    a.href = URL.createObjectURL(file);
+    a.download = fileName;
+    a.click();
+}
+
+function saveGraph() {
+
+  console.log(simulation.force("link").links());
+  console.log(typeof(simulation.force("link").links()));
+
+    var reduced_links = simulation.force("link").links().map(function(l){
+
+    var temp;
+
+    temp = Object.assign({}, l);
+
+    temp.source = temp.source.id;
+    temp.target = temp.target.id;
+    return temp;
+  });
+
+  save_state = {
+    "nodes" : simulation.nodes(),
+    "links" : reduced_links
+  }
+
+  download(JSON.stringify(save_state), 'new_node_data.json', 'application/json');
+}
+
+// http://www.coppelia.io/2014/07/an-a-to-z-of-extra-features-for-the-d3-force-layout/
+
+</script>
+</html>
