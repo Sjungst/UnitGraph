@@ -287,17 +287,17 @@ textarea {
     <div>
       <h3>Network Layout: </h3>
         <label class="container-radio">Default
-          <input type="radio" checked="checked" name="radio">
+          <input id="default-layout-radio" type="radio" checked="checked" name="radio">
           <span class="checkmark"></span>
         </label>
         <label class="container-radio">Radial
           <input id="radial-layout-radio" type="radio" name="radio">
           <span class="checkmark"></span>
         </label>
-        <label class="container-radio">Vertical
+<!--         <label class="container-radio">Vertical
           <input id="vertical-layout-radio" type="radio" name="radio">
           <span class="checkmark"></span>
-        </label>
+        </label> -->
     </div>
 
     <div>
@@ -477,6 +477,12 @@ d3.json(filepath, function(error, graph) {
   simulation.force("link")
       .links(graph.links);
 
+  // var nodePosn;
+
+  // for(node in simulation.nodes()){
+  //     console.log(simulation.nodes()[node]);
+  //   }
+
   save_state = {
     "nodes" : simulation.nodes(),
     "links" : simulation.force("link").links()
@@ -489,11 +495,25 @@ d3.json(filepath, function(error, graph) {
   // simulation.force("link").links(save_state.links);
 
 
+// Selecting any of these elements will "re-heat" the simulation, this should be reworked
+  d3.select('#display-labels-checkbox')
+      .on('click', function() { simulation.alpha(0.5).restart() }, false);
+
+  d3.select('#default-layout-radio')
+      .on('click', function() { simulation.alpha(0.5).restart() }, false);
+
+  d3.select('#radial-layout-radio')
+      .on('click', function() { simulation.alpha(0.5).restart() }, false);
+
+  // d3.select('#vertical-layout-radio')
+  //     .on('click', function() { simulation.alpha(0.5).restart() }, false);
+
   function ticked() {
-    if(document.getElementById("radial-layout-radio").checked == true){
+
+    if(document.getElementById("radial-layout-radio").checked){
       radialLayout();
-    }else if(document.getElementById("vertical-layout-radio").checked == true){
-      verticalLayout();
+    // }else if(document.getElementById("vertical-layout-radio").checked){
+    //   verticalLayout();
     }else{
       defaultLayout();
     }
@@ -516,7 +536,6 @@ d3.json(filepath, function(error, graph) {
          .attr("y", function (d) { return 5000; });
   }
 }
-
 
 function radialLayout(){
   node
